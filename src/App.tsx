@@ -12,6 +12,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -50,29 +52,69 @@ function App() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    setIsSigningUp(true);
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Check your email for the confirmation link!');
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast.success('Welcome! Please check your email to confirm your account', {
+        icon: '✉️',
+        duration: 5000,
+        style: {
+          background: '#3b82f6',
+          color: 'white',
+        },
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create account', {
+        icon: '❌', 
+        duration: 4000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+        },
+      });
+    } finally {
+      setIsSigningUp(false);
     }
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    setIsSigningIn(true);
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Signed in successfully!');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast.success('Welcome back!', {
+        icon: '👋',
+        duration: 3000,
+        style: {
+          background: '#22c55e',
+          color: 'white',
+        },
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign in', {
+        icon: '❌',
+        duration: 4000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+        },
+      });
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -154,16 +196,47 @@ function App() {
             <div className="flex gap-4">
               <button
                 type="submit"
-                className="flex-1 bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                disabled={isSigningIn}
+                className={`flex-1 bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                  disabled:opacity-70 disabled:cursor-not-allowed
+                  transition duration-200 ease-in-out transform hover:scale-102
+                  ${isSigningIn ? 'animate-pulse' : ''}`}
               >
-                Sign In
+                {isSigningIn ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing in...
+                  </span>
+                ) : (
+                  'Sign In'
+                )}
               </button>
+              
               <button
                 type="button"
                 onClick={handleSignUp}
-                className="flex-1 bg-gray-50 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                disabled={isSigningUp}
+                className={`flex-1 bg-gray-50 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-100
+                  focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                  disabled:opacity-70 disabled:cursor-not-allowed
+                  transition duration-200 ease-in-out transform hover:scale-102
+                  ${isSigningUp ? 'animate-pulse' : ''}`}
               >
-                Sign Up
+                {isSigningUp ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating account...
+                  </span>
+                ) : (
+                  'Sign Up'
+                )}
               </button>
             </div>
           </form>
